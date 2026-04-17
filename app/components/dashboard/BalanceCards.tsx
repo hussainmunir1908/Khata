@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card'
 import { LedgerEntry } from '@/types/database'
 import { Activity, ArrowDownRight, ArrowUpRight } from 'lucide-react'
 
@@ -7,11 +6,7 @@ type BalanceCardsProps = {
 }
 
 export default function BalanceCards({ entries }: BalanceCardsProps) {
-  let totalOwesMe = 0 // Credits (others owe user) - Wait, 'debt' means they are in debt to me?
-  // Let's adopt standard double-entry naming logic or the one specified:
-  // Prompt: "type='debt' (Owes me) and type='credit' (I Owe)"
-  // Okay: debt = they owe me, credit = I owe them
-
+  let totalOwesMe = 0
   let totalIOwe = 0
 
   entries.forEach((entry) => {
@@ -23,52 +18,82 @@ export default function BalanceCards({ entries }: BalanceCardsProps) {
     }
   })
 
-  // Net Balance: Total Owes Me (Assets) - Total I Owe (Liabilities)
   const netBalance = totalOwesMe - totalIOwe
+  const isPositive = netBalance >= 0
+
+  const cards = [
+    {
+      label: 'NET BALANCE',
+      value: netBalance,
+      prefix: isPositive ? '+Rs ' : '-Rs ',
+      absValue: Math.abs(netBalance),
+      icon: Activity,
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-[#3B5BDB]',
+      valueColor: isPositive ? 'text-[#3B5BDB]' : 'text-red-500',
+      accentBar: isPositive ? 'bg-[#3B5BDB]' : 'bg-red-400',
+    },
+    {
+      label: 'OWES ME',
+      value: totalOwesMe,
+      prefix: 'Rs ',
+      absValue: totalOwesMe,
+      icon: ArrowDownRight,
+      iconBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      valueColor: 'text-emerald-600',
+      accentBar: 'bg-emerald-400',
+    },
+    {
+      label: 'I OWE',
+      value: totalIOwe,
+      prefix: 'Rs ',
+      absValue: totalIOwe,
+      icon: ArrowUpRight,
+      iconBg: 'bg-red-50',
+      iconColor: 'text-red-500',
+      valueColor: 'text-red-500',
+      accentBar: 'bg-red-400',
+    },
+  ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-      <Card className="bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm transition-all hover:shadow-md">
-        <CardContent className="p-6 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#3B5BDB]">
-              <Activity size={16} />
-            </div>
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Net Balance</p>
-          </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </h2>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+      {cards.map(({ label, prefix, absValue, icon: Icon, iconBg, iconColor, valueColor, accentBar }) => (
+        <div
+          key={label}
+          className="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+        >
+          {/* Accent top bar */}
+          <div className={`absolute top-0 left-0 right-0 h-0.5 ${accentBar}`} />
 
-      <Card className="bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm transition-all hover:shadow-md">
-        <CardContent className="p-6 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-              <ArrowDownRight size={16} />
+          <div className="p-6">
+            {/* Label + icon */}
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+                {label}
+              </p>
+              <div className={`w-9 h-9 rounded-full ${iconBg} flex items-center justify-center`}>
+                <Icon size={17} className={iconColor} strokeWidth={2.5} />
+              </div>
             </div>
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Owes Me</p>
-          </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            ${totalOwesMe.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </h2>
-        </CardContent>
-      </Card>
 
-      <Card className="bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm transition-all hover:shadow-md">
-        <CardContent className="p-6 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600">
-              <ArrowUpRight size={16} />
-            </div>
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">I Owe</p>
+            {/* Amount */}
+            <p
+              className={`text-3xl font-extrabold tabular-nums tracking-tight ${valueColor}`}
+              style={{ fontFamily: 'var(--font-headline, var(--font-sans))' }}
+            >
+              {prefix}
+              {absValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
+
+            {/* Entry count */}
+            <p className="text-xs text-gray-400 mt-1.5 font-medium">
+              {entries.length} {entries.length === 1 ? 'entry' : 'entries'} total
+            </p>
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            ${totalIOwe.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </h2>
-        </CardContent>
-      </Card>
+        </div>
+      ))}
     </div>
   )
 }

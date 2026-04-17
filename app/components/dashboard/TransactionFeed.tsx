@@ -1,90 +1,119 @@
+/**
+ * TransactionFeed — Right-side scrollable activity feed.
+ * Matches the HTML reference "Recent Activity" panel (right col, 5 cols).
+ */
 import { LedgerEntry } from '@/types/database'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { format, parseISO } from 'date-fns'
+import {
+  UtensilsCrossed,
+  Car,
+  ShoppingCart,
+  DollarSign,
+  Receipt,
+  Download,
+} from 'lucide-react'
 
-type TransactionFeedProps = {
-  entries: LedgerEntry[]
+type Props = { entries: LedgerEntry[] }
+
+type IconConfig = { icon: React.ElementType; bg: string; iconColor: string }
+
+function categoryIcon(category: string | null): IconConfig {
+  const cat = (category ?? '').toLowerCase()
+  if (cat.includes('lunch') || cat.includes('food') || cat.includes('dinner') || cat.includes('breakfast'))
+    return { icon: UtensilsCrossed, bg: 'bg-blue-100', iconColor: 'text-blue-600' }
+  if (cat.includes('uber') || cat.includes('transport') || cat.includes('ride') || cat.includes('fuel') || cat.includes('car'))
+    return { icon: Car, bg: 'bg-orange-100', iconColor: 'text-orange-600' }
+  if (cat.includes('grocer') || cat.includes('market') || cat.includes('shop'))
+    return { icon: ShoppingCart, bg: 'bg-purple-100', iconColor: 'text-purple-600' }
+  if (cat.includes('payment') || cat.includes('receive') || cat.includes('settle'))
+    return { icon: DollarSign, bg: 'bg-emerald-100', iconColor: 'text-emerald-600' }
+  return { icon: Receipt, bg: 'bg-slate-100', iconColor: 'text-slate-500' }
 }
 
-export default function TransactionFeed({ entries }: TransactionFeedProps) {
-  // Sort entries by created_at descending (newest first)
-  const sortedEntries = [...entries].sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+export default function TransactionFeed({ entries }: Props) {
+  const sorted = [...entries].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )
 
   return (
-    <Card className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-      <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4 px-6 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Recent Transactions</CardTitle>
-        <div className="text-xs font-semibold text-gray-500 uppercase tracking-widest bg-gray-200/50 px-2.5 py-1 rounded-full">
-          {entries.length} Entries
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        {sortedEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-              <span className="text-2xl">📝</span>
+    <div
+      className="rounded-2xl glass-border shadow-xl flex flex-col"
+      style={{
+        background: 'rgba(255,255,255,0.25)',
+        backdropFilter: 'blur(24px)',
+        height: '560px',
+      }}
+    >
+      {/* Header */}
+      <div className="p-6 border-b border-white/20 shrink-0">
+        <h2
+          className="text-xl font-bold text-slate-800"
+          style={{ fontFamily: 'var(--font-headline, sans-serif)' }}
+        >
+          Recent Activity
+        </h2>
+      </div>
+
+      {/* Scrollable list */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+        {sorted.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full py-12 text-center px-6">
+            <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Receipt size={22} className="text-blue-500" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No transactions yet</h3>
-            <p className="text-sm text-gray-500 max-w-sm">
-              Use the actions above to quick log an entry, snap a receipt, or record a voice note to start building your ledger.
+            <p className="font-bold text-slate-700 text-sm mb-1">No activity yet</p>
+            <p className="text-xs text-slate-400">
+              Add an entry to see your transaction history here.
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {sortedEntries.map((entry) => {
-              const isDebt = entry.type === 'debt'
-              const amountStr = Number(entry.amount).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-              })
+          sorted.map((entry) => {
+            const isDebt = entry.type === 'debt'
+            const { icon: Icon, bg, iconColor } = categoryIcon(entry.category)
+            const amount = Number(entry.amount).toLocaleString('en-US', {
+              minimumFractionDigits: 0,
+            })
 
-              return (
-                <li key={entry.id} className="p-4 sm:px-6 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start sm:items-center gap-4">
-                    {/* Circle Initial */}
-                    <div className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-500 font-bold uppercase text-sm shrink-0">
-                      {entry.entity.charAt(0)}
-                    </div>
-                    
-                    <div>
-                      <p className="text-base font-bold text-gray-900">{entry.entity}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-medium text-gray-500">
-                          {format(parseISO(entry.created_at), 'MMM d, yyyy • h:mm a')}
-                        </span>
-                        {entry.category && (
-                          <>
-                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                            <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full inline-block">
-                              {entry.category}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            return (
+              <div
+                key={entry.id}
+                className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/20 active:bg-white/30 transition-colors cursor-pointer"
+              >
+                {/* Category icon */}
+                <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center shrink-0`}>
+                  <Icon size={18} className={iconColor} />
+                </div>
 
-                  <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-center">
-                    <span
-                      className={`text-lg font-extrabold tracking-tight ${
-                        isDebt ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {isDebt ? '+' : '-'}${amountStr}
-                    </span>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm mt-1 sm:mt-0 ${
-                      isDebt ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
-                      {isDebt ? 'Owes Me' : 'I Owe'}
-                    </span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-slate-800 truncate">{entry.entity}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    {format(parseISO(entry.created_at), "MMM d, h:mm a")}
+                    {entry.category ? ` · ${entry.category}` : ''}
+                  </p>
+                </div>
+
+                {/* Amount */}
+                <span
+                  className={`font-bold text-sm tabular-nums shrink-0 ${
+                    isDebt ? 'text-emerald-600' : 'text-red-500'
+                  }`}
+                >
+                  {isDebt ? '+' : '-'}Rs {amount}
+                </span>
+              </div>
+            )
+          })
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Footer */}
+      <div className="p-5 text-center border-t border-white/20 shrink-0">
+        <button className="text-blue-600 text-xs font-bold hover:underline flex items-center gap-1 mx-auto">
+          <Download size={12} />
+          Download Statement (PDF)
+        </button>
+      </div>
+    </div>
   )
 }

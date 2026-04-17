@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LedgerEntry, Profile } from '@/types/database'
-import DashboardHeader from './DashboardHeader'
-import BalanceCards from './BalanceCards'
+import BalanceSummary from './BalanceSummary'
+import FinancialCircle from './FinancialCircle'
 import TransactionFeed from './TransactionFeed'
 import { toast } from 'sonner'
 
@@ -20,52 +20,50 @@ export default function DashboardClient({ profile, initialEntries }: DashboardCl
   useEffect(() => {
     if (!profile?.id) return
 
-    // Set up real-time subscription for the current user's ledger entries
+    // Real-time subscription for the current user's ledger entries
     const channel = supabase
       .channel('ledger-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'ledger',
           filter: `user_id=eq.${profile.id}`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            const newEntry = payload.new as LedgerEntry
-            setEntries((prev) => [newEntry, ...prev])
+            setEntries((prev) => [payload.new as LedgerEntry, ...prev])
             toast.success('New transaction logged!')
           } else if (payload.eventType === 'UPDATE') {
-            const updatedEntry = payload.new as LedgerEntry
-            setEntries((prev) =>
-              prev.map((entry) => (entry.id === updatedEntry.id ? updatedEntry : entry))
-            )
+            const updated = payload.new as LedgerEntry
+            setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
           } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old.id
-            setEntries((prev) => prev.filter((entry) => entry.id !== deletedId))
+            setEntries((prev) => prev.filter((e) => e.id !== payload.old.id))
           }
         }
       )
       .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to real-time ledger updates')
-        } else if (err) {
-          console.error('Failed to subscribe to realtime:', err)
-        }
+        if (err) console.error('Realtime subscribe error:', err)
       })
 
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [profile?.id, supabase])
 
   return (
-    <>
-      <DashboardHeader fullName={profile?.full_name ?? null} />
-      <BalanceCards entries={entries} />
-      <TransactionFeed entries={entries} />
-    </>
+    <div className="space-y-10">
+      {/* Balance Summary — full width hero card */}
+      <BalanceSummary entries={entries} />
+
+      {/* Asymmetric grid: Financial Circle (left 7) + Transaction Feed (right 5) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-7">
+          <FinancialCircle entries={entries} />
+        </div>
+        <aside className="lg:col-span-5">
+          <TransactionFeed entries={entries} />
+        </aside>
+      </div>
+    </div>
   )
 }
