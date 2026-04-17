@@ -13,7 +13,6 @@
 
 import Navbar from '@/app/components/Navbar'
 import HeroSection from '@/app/components/HeroSection'
-import StatsSection from '@/app/components/StatsSection'
 import FeaturesSection from '@/app/components/FeaturesSection'
 import Footer from '@/app/components/Footer'
 import { Toaster } from 'sonner'
@@ -31,10 +30,7 @@ export default function Home() {
         {/* Hero: headline + email CTA + phone mockup */}
         <HeroSection />
 
-        {/* Social proof metrics */}
-        <StatsSection />
-
-        {/* Product features: encryption + global ledger */}
+        {/* Product features */}
         <FeaturesSection />
       </main>
 

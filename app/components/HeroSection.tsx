@@ -42,14 +42,14 @@ export default function HeroSection() {
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
         {/* Headline */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight max-w-2xl mx-auto">
-          Track expenses, settle debts{' '}
-          <span className="text-gray-900">effortlessly</span>
+          Zero Data Entry.{' '}
+          <span className="text-[#3B5BDB]">Pure Intelligence.</span>
         </h1>
 
         {/* Subtitle */}
         <p className="mt-4 text-base sm:text-lg text-gray-500 max-w-md mx-auto leading-relaxed">
-          Voice notes and receipt scans turn into organized ledger entries
-          automatically.
+          Our AI engine analyzes voice notes and photos of receipts to categorize
+          your campus finances instantly.
         </p>
 
         {/* Email waitlist form */}

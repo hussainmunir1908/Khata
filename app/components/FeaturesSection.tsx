@@ -5,7 +5,7 @@
  * Right: stacked FeatureCards (Primary blue + secondary gray)
  */
 
-import { Shield, Globe } from 'lucide-react'
+import { Mic, Camera } from 'lucide-react'
 import FeatureCard from './FeatureCard'
 
 /** SVG sparkle decoration matching screenshot */
@@ -53,8 +53,8 @@ export default function FeaturesSection() {
 
             {/* Body */}
             <p className="mt-5 text-base text-gray-500 leading-relaxed max-w-md">
-              Our neuro engine analyzes voices, PDFs, and blurry photos to
-              categorize your financial life instantly.
+              Our AI engine analyzes voice notes and photos of receipts to
+              categorize your campus finances instantly.
             </p>
           </div>
 
@@ -62,15 +62,15 @@ export default function FeaturesSection() {
           <div className="order-1 lg:order-2 flex flex-col gap-4">
             <FeatureCard
               variant="primary"
-              icon={<Shield size={28} />}
-              title="Military-Grade Encryption"
-              description="Your data never leaves your device unencrypted. We prioritize privacy over everything."
+              icon={<Mic size={28} />}
+              title="Voice-First Entry"
+              description="Stop typing and start talking. Record a quick voice note, and our AI instantly extracts the amount, entity, and category into your ledger."
             />
             <FeatureCard
               variant="secondary"
-              icon={<Globe size={28} />}
-              title="Global Ledger"
-              description="Multi-currency support with real-time conversion rates across 160+ countries."
+              icon={<Camera size={28} />}
+              title="Smart Receipt OCR"
+              description="Snap a photo of any paper receipt or hand-written bill. We automatically structure the data so you never lose track of a single 'Parchi' again."
             />
           </div>
 
