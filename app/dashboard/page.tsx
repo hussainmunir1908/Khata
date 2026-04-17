@@ -68,14 +68,17 @@ export default async function DashboardPage() {
         className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-6 pt-2 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.04)] glass-border"
         style={{ background: 'rgba(255,255,255,0.30)', backdropFilter: 'blur(24px)' }}
       >
-        {([
-          { icon: LayoutGrid, label: 'Home', active: true },
-          { icon: TrendingUp, label: 'Insights', active: false },
-          { icon: Wallet, label: 'Wallets', active: false },
-          { icon: User, label: 'Profile', active: false },
-        ] as const).map(({ icon: Icon, label, active }) => (
-          <button
+        {(
+          [
+            { icon: LayoutGrid, label: 'Home', href: '/dashboard', active: true },
+            { icon: TrendingUp, label: 'Ledger', href: '/ledger', active: false },
+            { icon: Wallet, label: 'Wallets', href: '#', active: false },
+            { icon: User, label: 'Profile', href: '#', active: false },
+          ] as const
+        ).map(({ icon: Icon, label, href, active }) => (
+          <Link
             key={label}
+            href={href}
             className={`flex flex-col items-center justify-center p-3 rounded-full transition-all duration-300 ${
               active
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 scale-110'
@@ -84,7 +87,7 @@ export default async function DashboardPage() {
           >
             <Icon size={20} />
             <span className="text-[11px] font-bold uppercase tracking-widest mt-1">{label}</span>
-          </button>
+          </Link>
         ))}
       </footer>
     </div>

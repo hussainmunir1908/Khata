@@ -13,7 +13,7 @@ import {
 
 const navItems = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Ledger', href: '/dashboard/ledger', icon: BookOpen },
+  { label: 'Ledger', href: '/ledger', icon: BookOpen },
   { label: 'Scanner', href: '/dashboard/scanner', icon: ScanLine },
 ]
 
