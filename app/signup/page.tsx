@@ -2,15 +2,15 @@
 
 /**
  * app/signup/page.tsx
- * Email + password + confirm password signup form.
- * On success: Supabase sends a verification email.
- * Shows a "check your email" message rather than immediately redirecting,
- * since the user must verify before their session is active.
+ * Signup with: full name, phone number, email, password, confirm password.
+ * On success: inserts a row into public.profiles, then routes straight to /dashboard.
+ * No email-verification screen — email confirmation is disabled in Supabase dashboard.
  */
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Eye, EyeOff, Loader2, MailCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -25,6 +25,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function SignupPage() {
+  const router = useRouter()
+
+  const [fullName, setFullName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,13 +36,25 @@ export default function SignupPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fieldError, setFieldError] = useState<string | null>(null)
-  const [verificationSent, setVerificationSent] = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setFieldError(null)
 
-    // Client-side validation
+    // ── Client-side validation ──────────────────────────────────────────────
+    if (!fullName.trim()) {
+      setFieldError('Please enter your full name.')
+      return
+    }
+    if (!phoneNumber.trim()) {
+      setFieldError('Please enter your phone number.')
+      return
+    }
+    // Basic phone sanity: at least 7 digits present
+    if (!/\d{7,}/.test(phoneNumber.replace(/[\s\-+()]/g, ''))) {
+      setFieldError('Please enter a valid phone number.')
+      return
+    }
     if (!email || !password || !confirmPassword) {
       setFieldError('Please fill in all fields.')
       return
@@ -61,71 +77,85 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signUp({ email, password })
 
-      if (error) {
-        // Map specific Supabase error codes to friendly messages
-        const msg = error.message.toLowerCase()
-        const code = (error as { code?: string }).code ?? ''
+      // ── Step 1: Create auth user ────────────────────────────────────────
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (authError) {
+        const msg = authError.message.toLowerCase()
+        const code = (authError as { code?: string }).code ?? ''
 
         if (code === 'over_email_send_rate_limit' || msg.includes('rate limit')) {
           toast.error('Too many attempts', {
-            description: 'Email rate limit reached. Please wait a few minutes and try again, or disable email confirmation in your Supabase dashboard.',
+            description: 'Please wait a few minutes and try again.',
             duration: 8000,
           })
-          setFieldError('Email rate limit reached. Please wait a few minutes and try again.')
-        } else if (
-          msg.includes('already registered') ||
-          msg.includes('already exists') ||
-          msg.includes('user already')
-        ) {
-          toast.error('This email is already registered', {
-            description: 'Try logging in instead.',
-          })
+          setFieldError('Email rate limit reached. Please try again shortly.')
+        } else if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
+          toast.error('Email already registered', { description: 'Try logging in instead.' })
           setFieldError('This email is already registered.')
         } else {
-          // Always surface the actual Supabase message so nothing is silent
-          toast.error('Signup failed', { description: error.message })
-          setFieldError(error.message)
+          toast.error('Signup failed', { description: authError.message })
+          setFieldError(authError.message)
         }
         return
       }
 
-      // Success — Supabase sends a verification email
-      toast.success('Check your email to verify your account 📬', {
-        description: 'We sent a confirmation link to ' + email,
-        duration: 6000,
-      })
-      setVerificationSent(true)
+      const userId = authData.user?.id
+      if (!userId) {
+        toast.error('Signup failed', { description: 'Could not retrieve user. Please try again.' })
+        return
+      }
+
+      // ── Step 2: Upsert profile row ──────────────────────────────────────
+      // Supabase may auto-create a bare profile row (id only, NULLs) via a
+      // trigger the moment auth.users is inserted. Using upsert with
+      // onConflict:'id' handles both: creates the row if missing, or updates
+      // the trigger-created row with the real name + phone data.
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: userId,
+            full_name: fullName.trim(),
+            phone_number: phoneNumber.trim(),
+          },
+          { onConflict: 'id' }
+        )
+
+      if (profileError) {
+        // Only treat as phone-duplicate if the constraint name mentions phone_number
+        const isPhoneDuplicate =
+          profileError.code === '23505' &&
+          (profileError.message.toLowerCase().includes('phone_number') ||
+            profileError.message.toLowerCase().includes('phone'))
+
+        if (isPhoneDuplicate) {
+          toast.error('Phone number already in use', {
+            description: 'This phone number is linked to another account.',
+          })
+          setFieldError('This phone number is already registered.')
+          await supabase.auth.signOut()
+          return
+        }
+        // Non-critical profile error — user is signed in, warn but proceed
+        toast.warning('Account created, but profile save failed.', {
+          description: profileError.message,
+        })
+      }
+
+      // ── Step 3: Redirect straight to dashboard ──────────────────────────
+      toast.success('Account created! Welcome to Khata 🎉')
+      router.push('/dashboard')
+      router.refresh()
     } catch {
-      toast.error('Network error', { description: 'Please check your connection.' })
+      toast.error('Network error', { description: 'Please check your connection and try again.' })
     } finally {
       setLoading(false)
     }
-  }
-
-  // Post-signup success state
-  if (verificationSent) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#d8e4ff] via-[#eef2ff] to-white px-4 py-16">
-        <div className="w-full max-w-sm text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-            <MailCheck className="text-[#3B5BDB]" size={32} />
-          </div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Verify your email</h1>
-          <p className="mt-3 text-sm text-gray-500 leading-relaxed">
-            We sent a confirmation link to <strong className="text-gray-800">{email}</strong>.
-            <br />Click the link to activate your account.
-          </p>
-          <p className="mt-6 text-sm text-gray-400">
-            Already verified?{' '}
-            <Link href="/login" className="font-semibold text-[#3B5BDB] hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </main>
-    )
   }
 
   return (
@@ -161,6 +191,42 @@ export default function SignupPage() {
                   {fieldError}
                 </p>
               )}
+
+              {/* Full Name */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="full-name" className="text-sm font-medium text-gray-700">
+                  Full name
+                </Label>
+                <Input
+                  id="full-name"
+                  type="text"
+                  placeholder="Muhammad Ali"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={loading}
+                  className="h-11 rounded-lg px-4"
+                  aria-required="true"
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                  Phone number
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+92 300 1234567"
+                  autoComplete="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  disabled={loading}
+                  className="h-11 rounded-lg px-4"
+                  aria-required="true"
+                />
+              </div>
 
               {/* Email */}
               <div className="flex flex-col gap-1.5">
@@ -252,10 +318,7 @@ export default function SignupPage() {
           <CardFooter className="justify-center border-t bg-gray-50/80">
             <p className="text-sm text-gray-500">
               Already have an account?{' '}
-              <Link
-                href="/login"
-                className="font-semibold text-[#3B5BDB] hover:underline"
-              >
+              <Link href="/login" className="font-semibold text-[#3B5BDB] hover:underline">
                 Log in here
               </Link>
             </p>

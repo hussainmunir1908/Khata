@@ -2,11 +2,20 @@
 
 /**
  * app/login/page.tsx
- * Email + password login form.
- * - Client component (needs state + event handlers)
- * - Uses browser Supabase client (cookie-based via @supabase/ssr)
- * - Sonner toasts for feedback
- * - Redirects to /dashboard on success via router.push()
+ * Accepts email OR phone number as the identifier.
+ *
+ * Detection logic:
+ *  - If input matches email format  → sign in directly with email + password
+ *  - Otherwise (treated as phone)    → call Supabase RPC `get_email_by_phone`
+ *                                       to resolve the email, then sign in
+ *
+ * The RPC function must exist in Supabase (see SQL below):
+ *   CREATE OR REPLACE FUNCTION get_email_by_phone(phone_input text)
+ *   RETURNS text LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+ *     SELECT au.email FROM auth.users au
+ *     INNER JOIN public.profiles p ON p.id = au.id
+ *     WHERE p.phone_number = phone_input LIMIT 1;
+ *   $$;
  */
 
 import { useState } from 'react'
@@ -26,9 +35,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')   // email or phone
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -38,13 +49,8 @@ export default function LoginPage() {
     e.preventDefault()
     setFieldError(null)
 
-    // Client-side validation
-    if (!email || !password) {
+    if (!identifier.trim() || !password) {
       setFieldError('Please fill in all fields.')
-      return
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFieldError('Please enter a valid email address.')
       return
     }
 
@@ -52,20 +58,51 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const isEmail = EMAIL_RE.test(identifier.trim())
+      let emailToUse = identifier.trim()
+
+      // ── Phone path: resolve email via RPC ──────────────────────────────
+      if (!isEmail) {
+        const { data: resolvedEmail, error: rpcError } = await supabase.rpc(
+          'get_email_by_phone',
+          { phone_input: identifier.trim() }
+        )
+
+        if (rpcError) {
+          toast.error('Lookup failed', { description: rpcError.message })
+          setFieldError('Could not look up this phone number. Please try with your email.')
+          return
+        }
+        if (!resolvedEmail) {
+          toast.error('Phone number not found', {
+            description: 'No account is linked to this phone number.',
+          })
+          setFieldError('No account found for this phone number.')
+          return
+        }
+        emailToUse = resolvedEmail as string
+      }
+
+      // ── Sign in with email + password ──────────────────────────────────
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
+        password,
+      })
 
       if (error) {
-        // Map Supabase error codes to user-friendly messages
+        const msg = error.message.toLowerCase()
         if (
-          error.message.toLowerCase().includes('invalid login') ||
-          error.message.toLowerCase().includes('invalid credentials') ||
-          error.message.toLowerCase().includes('email not confirmed')
+          msg.includes('invalid login') ||
+          msg.includes('invalid credentials') ||
+          msg.includes('email not confirmed')
         ) {
-          toast.error('Invalid email or password', {
-            description: 'Please check your credentials and try again.',
+          toast.error('Invalid credentials', {
+            description: 'Please check your details and try again.',
           })
+          setFieldError('Incorrect email/phone or password.')
         } else {
           toast.error('Login failed', { description: error.message })
+          setFieldError(error.message)
         }
         return
       }
@@ -98,7 +135,7 @@ export default function LoginPage() {
         <Card className="shadow-xl border-0 ring-1 ring-gray-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl font-bold text-gray-900">Sign in</CardTitle>
-            <CardDescription>Enter your credentials to continue</CardDescription>
+            <CardDescription>Use your email or phone number</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -114,18 +151,18 @@ export default function LoginPage() {
                 </p>
               )}
 
-              {/* Email */}
+              {/* Email or phone */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email address
+                <Label htmlFor="identifier" className="text-sm font-medium text-gray-700">
+                  Email or phone number
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="identifier"
+                  type="text"
+                  placeholder="you@example.com  or  +92 300 1234567"
+                  autoComplete="username"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   disabled={loading}
                   className="h-11 rounded-lg px-4"
                   aria-required="true"
@@ -175,10 +212,7 @@ export default function LoginPage() {
           <CardFooter className="justify-center border-t bg-gray-50/80">
             <p className="text-sm text-gray-500">
               Don&apos;t have an account?{' '}
-              <Link
-                href="/signup"
-                className="font-semibold text-[#3B5BDB] hover:underline"
-              >
+              <Link href="/signup" className="font-semibold text-[#3B5BDB] hover:underline">
                 Sign up here
               </Link>
             </p>
