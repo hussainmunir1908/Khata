@@ -28,9 +28,7 @@ export default function BalanceSummary({ entries }: Props) {
     .reduce((s, e) => s + Number(e.amount), 0)
 
   return (
-    <section className="relative group overflow-hidden rounded-2xl glass-border shadow-[0_20px_40px_rgba(44,52,55,0.08)]"
-      style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(24px)' }}
-    >
+    <section className="relative group overflow-hidden rounded-2xl glass-border shadow-[0_20px_40px_rgba(44,52,55,0.08)] bg-white/40 dark:bg-slate-800/50 backdrop-blur-2xl transition-colors duration-300">
       {/* Decorative blurred orb */}
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -64,7 +62,7 @@ export default function BalanceSummary({ entries }: Props) {
             { label: 'Owes Me', value: `Rs ${owesMe.toLocaleString()}`, color: 'text-emerald-700' },
             { label: 'I Owe', value: `Rs ${iOwe.toLocaleString()}`, color: 'text-red-600' },
           ].map(({ label, value, color }) => (
-            <div key={label} className="bg-white/20 rounded-xl p-4 glass-border">
+            <div key={label} className="bg-white/25 dark:bg-white/5 rounded-xl p-4 glass-border">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">{label}</p>
               <p className={`text-xl font-extrabold tabular-nums ${color}`}
                 style={{ fontFamily: 'var(--font-headline, sans-serif)' }}>
@@ -81,8 +79,7 @@ export default function BalanceSummary({ entries }: Props) {
             Quick Settle
           </button>
           <button
-            className="flex items-center gap-2 text-slate-700 px-7 py-3 rounded-xl font-bold text-sm glass-border hover:bg-white/20 active:scale-95 transition-all"
-            style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}
+          className="flex items-center gap-2 text-slate-700 dark:text-slate-200 px-7 py-3 rounded-xl font-bold text-sm glass-border hover:bg-white/20 dark:hover:bg-white/10 active:scale-95 transition-all bg-white/20 dark:bg-white/5 backdrop-blur-sm"
           >
             <BarChart2 size={16} />
             Detailed Report

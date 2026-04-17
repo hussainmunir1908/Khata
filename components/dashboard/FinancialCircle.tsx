@@ -53,10 +53,7 @@ export default function FinancialCircle({ entries }: Props) {
       </div>
 
       {people.length === 0 ? (
-        <div
-          className="rounded-2xl p-10 text-center glass-border"
-          style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(16px)' }}
-        >
+        <div className="rounded-2xl p-10 text-center glass-border bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl">
           <p className="text-slate-500 text-sm">No contacts yet. Add a ledger entry to build your Financial Circle.</p>
         </div>
       ) : (
@@ -67,8 +64,7 @@ export default function FinancialCircle({ entries }: Props) {
             return (
               <div
                 key={name}
-                className="p-6 rounded-2xl glass-border hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
-                style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(16px)' }}
+                className="p-6 rounded-2xl glass-border hover:-translate-y-1 transition-all duration-300 cursor-pointer group bg-white/30 dark:bg-slate-800/40 backdrop-blur-xl"
               >
                 <div className="flex items-center gap-4">
                   {/* Letter avatar */}

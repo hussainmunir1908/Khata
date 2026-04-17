@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
 import { Search, Bell, Settings, Plus, LayoutGrid, TrendingUp, Wallet, User } from 'lucide-react'
 import DashboardClient from '@/components/dashboard/DashboardClient'
+import DashboardNav from '@/components/dashboard/DashboardNav'
 import { Profile, LedgerEntry } from '@/types/database'
 
 export default async function DashboardPage() {
@@ -37,79 +38,12 @@ export default async function DashboardPage() {
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden">
-      {/* Animated radial gradient background */}
-      <div
-        className="fixed inset-0 -z-20"
-        style={{
-          background:
-            'radial-gradient(circle at top left, #DBEAFE, #BFDBFE, #93C5FD)',
-        }}
-      />
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 relative overflow-x-hidden transition-colors duration-300">
       {/* Grain/noise texture overlay */}
       <div className="grain-overlay fixed inset-0 -z-10" aria-hidden="true" />
 
-      {/* ── Fixed Top Navbar ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
-        <div
-          className="flex items-center justify-between max-w-7xl mx-auto px-8 py-3 rounded-full glass-border shadow-[0_20px_40px_rgba(44,52,55,0.06)]"
-          style={{ background: 'rgba(255,255,255,0.40)', backdropFilter: 'blur(24px)' }}
-        >
-          {/* Left: brand + nav */}
-          <div className="flex items-center gap-8">
-            <Link
-              href="/"
-              className="text-2xl font-black text-blue-700 tracking-tight hover:opacity-80 transition-opacity"
-              style={{ fontFamily: 'var(--font-headline, sans-serif)' }}
-            >
-              Khata
-            </Link>
-            <nav className="hidden md:flex items-center gap-2">
-              <span className="text-blue-700 font-bold border-b-2 border-blue-600 px-1 pb-0.5 text-sm cursor-pointer">
-                Overview
-              </span>
-              <span className="text-slate-600 font-medium hover:bg-white/20 transition-all px-3 py-1 rounded-full text-sm cursor-pointer">
-                Ledger
-              </span>
-              <span className="text-slate-600 font-medium hover:bg-white/20 transition-all px-3 py-1 rounded-full text-sm cursor-pointer">
-                Scanner
-              </span>
-            </nav>
-          </div>
-
-          {/* Right: search + icons + avatar */}
-          <div className="flex items-center gap-3">
-            {/* Search bar */}
-            <div
-              className="hidden md:flex items-center rounded-full px-4 py-1.5 gap-2 glass-border"
-              style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(12px)' }}
-            >
-              <Search size={15} className="text-slate-500 shrink-0" />
-              <input
-                className="bg-transparent border-none outline-none text-sm w-44 text-slate-800 placeholder-slate-500"
-                placeholder="Search transactions..."
-                type="text"
-              />
-            </div>
-            <button className="p-2 text-slate-600 hover:bg-white/20 rounded-full transition-all">
-              <Bell size={18} />
-            </button>
-            <button className="p-2 text-slate-600 hover:bg-white/20 rounded-full transition-all">
-              <Settings size={18} />
-            </button>
-            {/* Avatar doubles as sign-out trigger */}
-            <form action={signOut}>
-              <button
-                type="submit"
-                title={`Signed in as ${displayName} — click to sign out`}
-                className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center border-2 border-white/50 shadow-sm hover:bg-blue-700 transition-colors"
-              >
-                {initial}
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+      {/* ── Shared top navbar ── */}
+      <DashboardNav displayName={displayName} />
 
       {/* ── Main content ── */}
       <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto space-y-10">

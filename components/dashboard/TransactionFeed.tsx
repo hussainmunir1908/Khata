@@ -37,12 +37,7 @@ export default function TransactionFeed({ entries }: Props) {
 
   return (
     <div
-      className="rounded-2xl glass-border shadow-xl flex flex-col"
-      style={{
-        background: 'rgba(255,255,255,0.25)',
-        backdropFilter: 'blur(24px)',
-        height: '560px',
-      }}
+      className="rounded-2xl glass-border shadow-xl flex flex-col h-[560px] bg-white/40 dark:bg-slate-800/50 backdrop-blur-2xl transition-colors duration-300"
     >
       {/* Header */}
       <div className="p-6 border-b border-white/20 shrink-0">
