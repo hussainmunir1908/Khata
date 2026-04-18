@@ -6,15 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from dotenv import load_dotenv
 
-dotenv_path_local = os.path.join(os.path.dirname(__file__), '.env')
-dotenv_path_parent = os.path.join(os.path.dirname(__file__), '..', '.env')
-
-if os.path.exists(dotenv_path_local):
-    load_dotenv(dotenv_path_local)
-elif os.path.exists(dotenv_path_parent):
-    load_dotenv(dotenv_path_parent)
-else:
-    load_dotenv() # Fallback
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 app = FastAPI(title="Digital Khata AI Backend")
 
