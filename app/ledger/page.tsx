@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
 import { Toaster } from 'sonner'
-import { Filter } from 'lucide-react'
+
 import LedgerClient from '@/components/khata-ledger/LedgerClient'
 import DashboardNav from '@/components/dashboard/DashboardNav'
 import MobileNav from '@/components/dashboard/MobileNav'
@@ -64,13 +64,6 @@ export default async function LedgerPage() {
             <h1 className="text-3xl font-bold text-slate-900">Financial Circle</h1>
             <p className="text-slate-500 mt-1 text-base">Keep track of who owes who.</p>
           </div>
-          <button
-            className="flex items-center gap-2 px-4 py-2 rounded-full glass-border text-slate-700 text-sm font-medium hover:bg-white/40 transition-all shrink-0"
-            style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(12px)' }}
-          >
-            <Filter size={15} />
-            Filter Activity
-          </button>
         </div>
 
         <LedgerClient

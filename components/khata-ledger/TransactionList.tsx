@@ -2,7 +2,7 @@
 
 import { LedgerEntry, Profile } from '@/types/database'
 import { format, parseISO } from 'date-fns'
-import { Receipt, BellRing, CreditCard, Filter, CheckCircle2 } from 'lucide-react'
+import { Receipt, BellRing, CreditCard, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import PaymentModal from '@/components/payment/PaymentModal'
@@ -13,10 +13,13 @@ type Props = {
   profile: Profile | null
 }
 
+const PAGE_SIZE = 8
+
 export default function TransactionList({ entries, profile }: Props) {
   const supabase = createClient()
   const [payingEntryId, setPayingEntryId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all')
+  const [page, setPage] = useState(1)
 
   async function handleAction(e: React.MouseEvent, entry: LedgerEntry, action: 'remind' | 'pay') {
     e.preventDefault()
@@ -66,13 +69,17 @@ export default function TransactionList({ entries, profile }: Props) {
     const net = contactNet.get(key) || 0
     const isContactPaid = Math.abs(net) <= 0.01
 
-    if (filter === 'pending') return !isEntryPaid && !isContactPaid // not settled at all
-    if (filter === 'paid') return isEntryPaid || isContactPaid // individually settled, or person is overall paid off
+    if (filter === 'pending') return !isEntryPaid && !isContactPaid
+    if (filter === 'paid') return isEntryPaid || isContactPaid
     return true
   })
 
+  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pagedEntries = filteredEntries.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
   return (
-    <section className="relative">
+    <section className="relative pb-24 sm:pb-0">
       <PaymentModal entryId={payingEntryId} onClose={() => setPayingEntryId(null)} />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
@@ -83,7 +90,7 @@ export default function TransactionList({ entries, profile }: Props) {
           {(['all', 'pending', 'paid'] as const).map(t => (
             <button
               key={t}
-              onClick={() => setFilter(t)}
+              onClick={() => { setFilter(t); setPage(1) }}
               className={`flex-1 sm:flex-none uppercase tracking-widest text-[10px] font-bold px-4 py-2 rounded-lg transition-all ${
                 filter === t 
                   ? 'bg-white shadow-sm text-slate-800' 
@@ -126,7 +133,7 @@ export default function TransactionList({ entries, profile }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredEntries.map((entry) => {
+                {pagedEntries.map((entry) => {
                   const isOwedToMe = entry.type === 'debt'
                   const isPaid = entry.status === 'paid' || (entry.description && entry.description.includes('[PAID]'))
                   return (
@@ -203,6 +210,28 @@ export default function TransactionList({ entries, profile }: Props) {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-4 px-1">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <p className="text-xs text-gray-400">
+            Page {safePage} of {totalPages}
+          </p>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
     </section>
   )
 }

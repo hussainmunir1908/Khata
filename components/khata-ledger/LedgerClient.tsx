@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LedgerEntry, Profile } from '@/types/database'
 import { toast } from 'sonner'
-import ContactCircleCards from './ContactCircleCards'
 import TransactionList from './TransactionList'
 
 type Props = {
@@ -50,7 +49,6 @@ export default function LedgerClient({ profile, initialEntries }: Props) {
 
   return (
     <div className="space-y-10">
-      <ContactCircleCards entries={entries} profile={profile} />
       <TransactionList entries={entries} profile={profile} />
     </div>
   )
