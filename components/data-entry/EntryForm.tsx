@@ -243,7 +243,7 @@ export default function EntryForm({ userId }: EntryFormProps) {
     }
 
     if (!associatedUserId) {
-      toast.error('User does not exist in the database.')
+      toast.error('User does not exist on Khata.')
       return
     }
 
