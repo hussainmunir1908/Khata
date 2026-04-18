@@ -16,11 +16,7 @@ function Receipt() {
   const desc    = p.get('desc')    ?? 'Ledger Settlement'
   const ts      = p.get('ts')      ?? new Date().toISOString()
 
-  const CONVENIENCE_FEE = 15
-  const baseAmount = Number(amount)
-  const totalAmount = baseAmount + CONVENIENCE_FEE
-  const amountFmt = baseAmount.toLocaleString('en-US')
-  const totalFmt  = totalAmount.toLocaleString('en-US')
+  const amountFmt = Number(amount).toLocaleString('en-US')
   const dateFmt   = format(parseISO(ts), 'PPpp')
   const txId      = id.substring(0, 8).toUpperCase() || '—'
 
@@ -48,9 +44,8 @@ function Receipt() {
         <div className="px-8 pt-8 pb-4 text-center">
           <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-1">Total Paid</p>
           <h2 className="text-5xl font-extrabold text-slate-800 tracking-tighter" style={{ fontFamily: 'var(--font-headline, sans-serif)' }}>
-            <span className="text-3xl text-slate-300 pr-1">Rs</span>{totalFmt}
+            <span className="text-3xl text-slate-300 pr-1">Rs</span>{amountFmt}
           </h2>
-          <p className="text-xs text-slate-400 mt-2">Rs {amountFmt} + Rs {CONVENIENCE_FEE} convenience fee</p>
         </div>
 
         {/* Receipt rows */}
