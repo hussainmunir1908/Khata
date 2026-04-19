@@ -31,7 +31,7 @@ On campus, money is constantly moving—splitting rickshaw rides, printing lab m
 * **Data Aggregation:** Custom PostgreSQL Views (e.g., the `financial_circle` view) to calculate net debt/credit balances on the fly without heavy client-side JavaScript math.
 
 ### **AI Engine & Algorithmic Logic**
-* **Core AI:** Gemini 3 Flash API.
+* **Core AI:** OpenAI GPT 4-o API.
 * **Voice & OCR Pipeline:** Custom prompt engineering to parse unstructured audio transcripts and receipt images into structured JSON payloads (amount, person, description, transaction type).
 * **Privacy-First Association Engine:** A custom "History-First" fuzzy matching algorithm (using Postgres `ILIKE`) that checks a user's local ledger history to auto-fill contact details before falling back to a global, exact-phone-number match. This ensures rapid data entry while strictly protecting user privacy.
 
