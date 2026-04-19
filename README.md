@@ -6,7 +6,7 @@
 
 On campus, money is constantly moving—splitting rickshaw rides, printing lab manuals, or grabbing lunch at the tuck shop. But tracking these micro-debts is socially awkward and manually tedious. People lose track, and trust erodes. 
 
-**Campus-Khata** isn't a banking app; it's an intelligent social ledger designed specifically for university students. We built this to eliminate the friction of data entry. No more typing numbers or scrolling through contacts. Just speak, and let the AI do the rest.
+**Khata** isn't a banking app; it's an intelligent social ledger designed specifically for university students. We built this to eliminate the friction of data entry. No more typing numbers or scrolling through contacts. Just speak, and let the AI do the rest.
 
 ## ✨ Key Features
 
@@ -37,11 +37,11 @@ On campus, money is constantly moving—splitting rickshaw rides, printing lab m
 
 ## 💼 Business Model
 
-Designed for sustainability, Campus-Khata operates on a high-margin **Freemium SaaS** model. Core tracking is free (with capped AI compute), while a Rs. 250/month Pro tier unlocks unlimited AI voice logs and advanced receipt splitting.
+Designed for sustainability, Khata operates on a high-margin **Freemium SaaS** model. Core tracking is free (with capped AI compute), while a Rs. 250/month Pro tier unlocks unlimited AI voice logs and advanced receipt splitting.
 
 ## 🚀 Installation & Setup
 
-Follow these steps to run Campus-Khata locally on your machine.
+Follow these steps to run Khata locally on your machine.
 
 ### 1. Environment Variables
 Create a `.env` file in the root directory of the project and add the following keys. You will need to provision a Supabase project and get a Google Gemini API key.
