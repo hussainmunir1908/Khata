@@ -3,7 +3,7 @@ import base64
 import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from openai import OpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 VOICE_SYSTEM_PROMPT = """You are a financial transaction parser for Pakistani users.
 Extract transaction details from Urdu/English/mixed text and return a JSON object.
@@ -94,13 +94,13 @@ async def voice_to_ledger(audio: UploadFile = File(...)):
     try:
         audio_bytes = await audio.read()
 
-        transcript = client.audio.transcriptions.create(
+        transcript = await client.audio.transcriptions.create(
             model="whisper-1",
             file=(audio.filename or "recording.webm", audio_bytes, audio.content_type or "audio/webm"),
             language="ur",
         )
 
-        completion = client.chat.completions.create(
+        completion = await client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": VOICE_SYSTEM_PROMPT},
@@ -123,7 +123,7 @@ async def ocr_to_ledger(image: UploadFile = File(...)):
         b64_image = base64.b64encode(image_bytes).decode("utf-8")
         mime = image.content_type or "image/jpeg"
 
-        completion = client.chat.completions.create(
+        completion = await client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {
@@ -145,3 +145,7 @@ async def ocr_to_ledger(image: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
