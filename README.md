@@ -1,4 +1,5 @@
 # 💸 Khata - Built for Micathon'26
+Link: https://khata-ai-pk.vercel.app
 
 > **Frictionless peer-to-peer debt tracking, powered by AI.**
 
